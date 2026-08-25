@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, ShieldCheck, Radio, Fingerprint, Shield } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { cn } from '../lib/utils';
+import rpiBg from '../assets/rpi-building.png';
 
 export default function Connexion() {
   const { connexion, inscription } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'connexion'|'inscription'>('connexion');
+  const [tab, setTab] = useState<'connexion' | 'inscription'>('connexion');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [erreur, setErreur] = useState('');
@@ -20,7 +21,7 @@ export default function Connexion() {
       await connexion(fd.get('email') as string, fd.get('mdp') as string);
       navigate('/');
     } catch (err: unknown) {
-      setErreur(err instanceof Error ? err.message : 'Erreur de connexion');
+      setErreur(err instanceof Error ? err.message : 'Identifiants incorrects');
     } finally { setLoading(false); }
   };
 
@@ -28,138 +29,316 @@ export default function Connexion() {
     e.preventDefault();
     setErreur(''); setLoading(true);
     const fd = new FormData(e.currentTarget);
-    if (fd.get('mdp') !== fd.get('mdp2')) { setErreur('Mots de passe différents'); setLoading(false); return; }
+    if (fd.get('mdp') !== fd.get('mdp2')) {
+      setErreur('Les mots de passe ne correspondent pas');
+      setLoading(false); return;
+    }
     try {
       await inscription({
-        nom: fd.get('nom') as string, secteur: fd.get('secteur') as string,
-        ville: fd.get('ville') as string, responsable: fd.get('responsable') as string,
-        email: fd.get('email') as string, telephone: fd.get('telephone') as string,
+        nom: fd.get('nom') as string,
+        secteur: fd.get('secteur') as string,
+        ville: fd.get('ville') as string,
+        responsable: fd.get('responsable') as string,
+        email: fd.get('email') as string,
+        telephone: fd.get('telephone') as string,
         mot_de_passe: fd.get('mdp') as string,
       });
       navigate('/');
     } catch (err: unknown) {
-      setErreur(err instanceof Error ? err.message : 'Erreur lors de l\'inscription');
+      setErreur(err instanceof Error ? err.message : "Erreur lors de l'inscription");
     } finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen bg-[#0F172A] flex">
-      {/* Panel gauche */}
-      <div className="hidden lg:flex w-2/5 flex-col items-center justify-center bg-gradient-to-br from-[#1A3A8F] to-[#0F172A] p-12 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: 'radial-gradient(circle at 30% 50%, #E8B400 0%, transparent 60%)' }} />
-        <div className="relative z-10 text-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 backdrop-blur mx-auto mb-6 shadow-2xl">
-            <span className="font-black text-white text-4xl">B</span>
-          </div>
-          <h1 className="text-4xl font-black text-white mb-2 tracking-tight">BISS 2</h1>
-          <p className="text-[#E8B400] font-semibold tracking-widest text-sm uppercase mb-8">Access Control</p>
-          <p className="text-slate-300 text-sm leading-relaxed max-w-xs">
-            Système intelligent de contrôle d'accès RFID et de suivi de présence pour entreprises.
-          </p>
-          <div className="mt-10 grid grid-cols-2 gap-4 text-center">
-            {[['100%', 'Local'], ['ESP32', 'Firmware'], ['Temps réel', 'WebSocket'], ['PostgreSQL', 'Local DB']].map(([val, lab]) => (
-              <div key={lab} className="rounded-xl bg-white/5 p-3">
-                <p className="text-[#E8B400] font-bold text-lg">{val}</p>
-                <p className="text-slate-400 text-xs">{lab}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-        <p className="relative z-10 mt-auto text-xs text-slate-500">
-          BISS Tech — Douala, Cameroun • «&nbsp;La marque du futur&nbsp;»
-        </p>
-      </div>
+    <div style={{ display: 'grid', minHeight: '100vh', gridTemplateColumns: '1fr 1fr' }}
+      className="connexion-grid">
 
-      {/* Panel droit */}
-      <div className="flex flex-1 flex-col items-center justify-center p-6">
-        <div className="w-full max-w-md">
-          <div className="flex lg:hidden items-center gap-3 mb-8 justify-center">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1A3A8F]">
-              <span className="font-black text-white text-xl">B</span>
+      {/* ── Panneau gauche — Photo RPI ─────────────────────── */}
+      <div style={{ position: 'relative', overflow: 'hidden' }} className="left-panel">
+        {/* Photo de fond */}
+        <img
+          src={rpiBg}
+          alt="Régie du Patrimoine Immobilier du PAD — Douala"
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            objectFit: 'cover', objectPosition: 'center',
+          }}
+        />
+        {/* Overlay dégradé */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(135deg, rgba(10,18,42,0.82) 0%, rgba(10,18,42,0.55) 50%, rgba(10,18,42,0.75) 100%)',
+        }} />
+
+        {/* Contenu sur la photo */}
+        <div style={{
+          position: 'relative', zIndex: 10,
+          display: 'flex', flexDirection: 'column',
+          justifyContent: 'space-between', height: '100%',
+          padding: '40px',
+        }}>
+          {/* Logo BISS en haut */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{
+              width: 48, height: 48,
+              background: '#1A3A8F',
+              borderRadius: 12,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 8px 32px rgba(26,58,143,0.5)',
+              flexShrink: 0,
+            }}>
+              <span style={{ fontWeight: 900, color: '#fff', fontSize: 22 }}>B</span>
             </div>
             <div>
-              <p className="font-bold text-white">BISS 2</p>
-              <p className="text-[10px] text-[#E8B400] tracking-widest uppercase">Access Control</p>
+              <p style={{ fontWeight: 800, color: '#fff', fontSize: 20, margin: 0, letterSpacing: '-0.5px' }}>BISS 2</p>
+              <p style={{ color: '#E8B400', fontSize: 10, margin: 0, letterSpacing: '3px', fontWeight: 600 }}>ACCESS CONTROL</p>
+            </div>
+          </div>
+
+          {/* Texte central */}
+          <div style={{ maxWidth: 440 }}>
+            {/* Badge RPI */}
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              background: 'rgba(232,180,0,0.15)',
+              border: '1px solid rgba(232,180,0,0.4)',
+              borderRadius: 50, padding: '6px 16px',
+              marginBottom: 20,
+            }}>
+              <Shield size={14} style={{ color: '#E8B400' }} />
+              <span style={{ color: '#E8B400', fontSize: 12, fontWeight: 600 }}>
+                Régie du Patrimoine Immobilier du PAD
+              </span>
+            </div>
+
+            <h2 style={{
+              color: '#fff', fontWeight: 800,
+              fontSize: 34, lineHeight: 1.15,
+              margin: '0 0 16px',
+              textShadow: '0 2px 20px rgba(0,0,0,0.4)',
+            }}>
+              Le contrôle d'accès RFID intelligent,{' '}
+              <span style={{ color: '#E8B400' }}>made in Cameroun.</span>
+            </h2>
+            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, lineHeight: 1.6, margin: '0 0 28px' }}>
+              BISS 2 relie vos modules ESP32, vos badges RFID et votre registre
+              de présence dans une seule console temps réel.
+            </p>
+
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[
+                [ShieldCheck, 'Autorisations par horaire, statut et expiration'],
+                [Radio, "Flux d'accès en direct sur chaque porte"],
+                [Fingerprint, 'Enrôlement des badges par scan RFID'],
+              ].map(([Icon, text], i) => (
+                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    width: 30, height: 30,
+                    background: 'rgba(232,180,0,0.15)',
+                    border: '1px solid rgba(232,180,0,0.3)',
+                    borderRadius: 8,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    {/* @ts-ignore */}
+                    <Icon size={15} style={{ color: '#E8B400' }} />
+                  </div>
+                  <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13 }}>{text as string}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Footer */}
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>
+            BISS TECH — Douala, Cameroun · «&nbsp;La marque du futur&nbsp;»
+          </p>
+        </div>
+      </div>
+
+      {/* ── Panneau droit — Formulaire ─────────────────────── */}
+      <div style={{
+        background: '#0F172A',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '40px 24px', overflowY: 'auto',
+      }}>
+        <div style={{ width: '100%', maxWidth: 420 }}>
+
+          {/* Logo mobile uniquement */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}
+            className="mobile-logo">
+            <div style={{ width: 40, height: 40, background: '#1A3A8F', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontWeight: 900, color: '#fff', fontSize: 18 }}>B</span>
+            </div>
+            <div>
+              <p style={{ fontWeight: 800, color: '#fff', fontSize: 16, margin: 0 }}>BISS 2</p>
+              <p style={{ color: '#E8B400', fontSize: 9, margin: 0, letterSpacing: '2px' }}>ACCESS CONTROL</p>
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="flex rounded-xl bg-slate-800/60 p-1 mb-6">
-            {(['connexion','inscription'] as const).map(t => (
+          <div style={{
+            display: 'flex', background: 'rgba(255,255,255,0.05)',
+            borderRadius: 12, padding: 4, marginBottom: 28,
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}>
+            {(['connexion', 'inscription'] as const).map(t => (
               <button key={t} onClick={() => { setTab(t); setErreur(''); }}
-                className={cn('flex-1 rounded-lg py-2 text-sm font-medium transition-all',
-                  tab === t ? 'bg-[#1A3A8F] text-white shadow' : 'text-slate-400 hover:text-white')}>
+                style={{
+                  flex: 1, padding: '9px 0',
+                  borderRadius: 9, border: 'none', cursor: 'pointer',
+                  fontWeight: 600, fontSize: 13, transition: 'all 0.2s',
+                  background: tab === t ? '#1A3A8F' : 'transparent',
+                  color: tab === t ? '#fff' : 'rgba(255,255,255,0.45)',
+                  boxShadow: tab === t ? '0 4px 12px rgba(26,58,143,0.4)' : 'none',
+                }}>
                 {t === 'connexion' ? 'Connexion' : 'Nouvelle société'}
               </button>
             ))}
           </div>
 
+          {/* Titre */}
+          <div style={{ marginBottom: 24 }}>
+            <h1 style={{ color: '#fff', fontWeight: 700, fontSize: 22, margin: '0 0 4px' }}>
+              {tab === 'connexion' ? 'Bienvenue' : 'Créer un espace'}
+            </h1>
+            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13, margin: 0 }}>
+              {tab === 'connexion'
+                ? 'Connectez-vous à votre console BISS 2'
+                : 'Enregistrez votre société pour commencer'}
+            </p>
+          </div>
+
+          {/* Erreur */}
           {erreur && (
-            <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-400">
+            <div style={{
+              marginBottom: 16,
+              background: 'rgba(239,68,68,0.1)',
+              border: '1px solid rgba(239,68,68,0.3)',
+              borderRadius: 10, padding: '10px 14px',
+              color: '#FCA5A5', fontSize: 13,
+            }}>
               {erreur}
             </div>
           )}
 
-          {tab === 'connexion' ? (
-            <form onSubmit={handleConnexion} className="space-y-4">
-              <Field label="Email" name="email" type="email" placeholder="admin@biss.tech" />
-              <Field label="Mot de passe" name="mdp" type={showPass ? 'text' : 'password'}
-                placeholder="••••••••"
-                suffix={
-                  <button type="button" onClick={() => setShowPass(!showPass)} className="text-slate-400 hover:text-white">
-                    {showPass ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          {/* Formulaire connexion */}
+          {tab === 'connexion' && (
+            <form onSubmit={handleConnexion} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <F label="Email" name="email" type="email" placeholder="contact@societe.cm" />
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>
+                  Mot de passe
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input name="mdp" type={showPass ? 'text' : 'password'}
+                    placeholder="••••••••" required
+                    style={inputStyle} />
+                  <button type="button" onClick={() => setShowPass(!showPass)}
+                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', padding: 0 }}>
+                    {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
-                }
-              />
+                </div>
+              </div>
               <button type="submit" disabled={loading}
-                className="w-full rounded-xl bg-[#1A3A8F] py-3 text-sm font-semibold text-white hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center gap-2">
-                {loading && <Loader2 className="size-4 animate-spin" />} Se connecter
+                style={{
+                  padding: '12px', borderRadius: 12, border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
+                  background: 'linear-gradient(135deg, #1A3A8F, #2A4DB0)',
+                  color: '#fff', fontWeight: 700, fontSize: 14,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  opacity: loading ? 0.7 : 1, marginTop: 4,
+                  boxShadow: '0 4px 20px rgba(26,58,143,0.4)',
+                  transition: 'all 0.2s',
+                }}>
+                {loading && <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />}
+                Se connecter
               </button>
-              <div className="rounded-xl bg-slate-800/40 border border-slate-700/40 p-3 text-xs text-slate-400">
-                <p className="font-semibold text-slate-300 mb-1">Comptes de démo :</p>
-                <p>Admin : <code className="text-[#E8B400]">admin@biss.tech</code> / <code className="text-[#E8B400]">password</code></p>
-                <p>Démo :  <code className="text-[#E8B400]">demo@camrail.cm</code> / <code className="text-[#E8B400]">password</code></p>
+
+              {/* Démo */}
+              <div style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 10, padding: '12px 14px',
+                marginTop: 4,
+              }}>
+                <p style={{ color: '#E8B400', fontSize: 11, fontWeight: 600, margin: '0 0 6px' }}>
+                  Comptes de démonstration
+                </p>
+                <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, margin: '0 0 2px' }}>
+                  Société : <span style={{ color: '#E8B400' }}>demo@camrail.cm</span> / password
+                </p>
+                <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, margin: 0 }}>
+                  Admin BISS : <span style={{ color: '#E8B400' }}>admin@biss.tech</span> / password
+                </p>
               </div>
             </form>
-          ) : (
-            <form onSubmit={handleInscription} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Nom de la société" name="nom" placeholder="BISS Tech" required />
-                <Field label="Secteur" name="secteur" placeholder="Sécurité" />
+          )}
+
+          {/* Formulaire inscription */}
+          {tab === 'inscription' && (
+            <form onSubmit={handleInscription} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <F label="Nom de la société *" name="nom" placeholder="BISS Tech" required />
+                <F label="Secteur" name="secteur" placeholder="Sécurité" />
+                <F label="Ville" name="ville" placeholder="Douala" />
+                <F label="Responsable" name="responsable" placeholder="Nom complet" />
+                <F label="Téléphone" name="telephone" type="tel" placeholder="+237 6XX XXX XXX" />
+                <F label="Email *" name="email" type="email" placeholder="contact@societe.cm" required />
+                <F label="Mot de passe *" name="mdp" type="password" placeholder="Min. 6 caractères" required />
+                <F label="Confirmer *" name="mdp2" type="password" placeholder="••••••••" required />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Ville" name="ville" placeholder="Douala" />
-                <Field label="Responsable" name="responsable" placeholder="Nom complet" />
-              </div>
-              <Field label="Téléphone" name="telephone" type="tel" placeholder="+237 6XX XXX XXX" />
-              <Field label="Email de connexion" name="email" type="email" placeholder="contact@societe.cm" required />
-              <Field label="Mot de passe" name="mdp" type="password" placeholder="Minimum 8 caractères" required />
-              <Field label="Confirmer le mot de passe" name="mdp2" type="password" placeholder="••••••••" required />
               <button type="submit" disabled={loading}
-                className="w-full rounded-xl bg-[#1A3A8F] py-3 text-sm font-semibold text-white hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center gap-2">
-                {loading && <Loader2 className="size-4 animate-spin" />} Créer mon espace
+                style={{
+                  padding: '12px', borderRadius: 12, border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
+                  background: 'linear-gradient(135deg, #1A3A8F, #2A4DB0)',
+                  color: '#fff', fontWeight: 700, fontSize: 14,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  opacity: loading ? 0.7 : 1, marginTop: 4,
+                  boxShadow: '0 4px 20px rgba(26,58,143,0.4)',
+                }}>
+                {loading && <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />}
+                Créer mon espace
               </button>
             </form>
           )}
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @media (max-width: 768px) {
+          .connexion-grid { grid-template-columns: 1fr !important; }
+          .left-panel { display: none !important; }
+        }
+        @media (min-width: 769px) {
+          .mobile-logo { display: none !important; }
+        }
+        input:focus { outline: none; border-color: #1A3A8F !important; box-shadow: 0 0 0 3px rgba(26,58,143,0.2); }
+      `}</style>
     </div>
   );
 }
 
-function Field({ label, name, type = 'text', placeholder, required = false, suffix }: {
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '10px 14px',
+  borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)',
+  background: 'rgba(255,255,255,0.05)',
+  color: '#fff', fontSize: 13,
+  boxSizing: 'border-box',
+  transition: 'all 0.2s',
+};
+
+function F({ label, name, type = 'text', placeholder = '', required = false }: {
   label: string; name: string; type?: string; placeholder?: string; required?: boolean;
-  suffix?: React.ReactNode;
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-slate-400 mb-1">{label}</label>
-      <div className="relative">
-        <input name={name} type={type} placeholder={placeholder} required={required}
-          className="w-full rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-[#1A3A8F] focus:outline-none focus:ring-1 focus:ring-[#1A3A8F]" />
-        {suffix && <div className="absolute right-3 top-1/2 -translate-y-1/2">{suffix}</div>}
-      </div>
+      <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.5)', marginBottom: 5 }}>
+        {label}
+      </label>
+      <input name={name} type={type} placeholder={placeholder} required={required}
+        style={inputStyle} />
     </div>
   );
 }
